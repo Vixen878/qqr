@@ -1,136 +1,180 @@
-/* ================================= app/page.tsx ================================= */
-"use client";
-import { useEffect, useMemo, useState } from "react";
-import { buildEMVQR, PLATFORM_BIC, type POIMethod } from "@/lib/emvqr";
+"use client"
 
-const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input {...props} className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring ${props.className ?? ""}`} />
-);
+import { PayloadDisplay } from '@/components/PayloadDisplay'
+import { buildEMVQR } from '@/lib/emvqr'
+import React, { useState, useEffect } from 'react'
+import { QrCodeDisplay } from '@/components/QrCodeDisplay'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { BuildParams } from '@/lib/types'
+import Link from 'next/link'
 
-export default function Page() {
-  const [platform, setPlatform] = useState<"telebirr" | "cbe" | "custom">("telebirr");
-  const [bic, setBic] = useState(PLATFORM_BIC["telebirr"]);
-  const [poiMethod, setPoiMethod] = useState<POIMethod>("11"); // static by default
-  const [amount, setAmount] = useState("");
-  const [name, setName] = useState("MULUKEN TADESSE GIZAW");
-  const [city, setCity] = useState("Addis Ababa");
-  const [acctOrPhone, setAcctOrPhone] = useState("0911309991");
-  const [mcc, setMcc] = useState("7999");
-  const [purpose, setPurpose] = useState("Goods/Services");
-  const [payload, setPayload] = useState("");
+
+// CBE Specific constants
+const CBE_BIC = 'CBETETAA';
+
+function CbeQrGenerator() {
+  const [merchantName, setMerchantName] = useState<string>('Sample Merchant');
+  const [merchantCity, setMerchantCity] = useState<string>('Addis Ababa');
+  const [accountNumber, setAccountNumber] = useState<string>('1000123456789');
+  const [amount, setAmount] = useState<string>('');
+  const [purpose, setPurpose] = useState<string>('');
+  const [payload, setPayload] = useState<string>('');
 
   useEffect(() => {
-    if (platform === "custom") return; // don't override manual BIC
-    setBic(PLATFORM_BIC[platform]);
-  }, [platform]);
+    const isDynamic = amount.trim() !== '';
 
-  const qrPayload = useMemo(() => {
-    const p = buildEMVQR({
-      poiMethod,
-      merchantName: name,
-      merchantCity: city,
-      currency: "230",
-      mcc,
-      amount: poiMethod === "12" && amount ? amount : undefined,
-      mai28: { bic, accountOrPhone: acctOrPhone },
-      addl: { purpose, mobileNumber: acctOrPhone },
-    });
-    return p;
-  }, [poiMethod, name, city, mcc, amount, bic, acctOrPhone, purpose]);
+    if (!merchantName || !merchantCity || !accountNumber) {
+      setPayload('');
+      return;
+    }
 
-  useEffect(() => setPayload(qrPayload), [qrPayload]);
+    const params: BuildParams = {
+      poiMethod: isDynamic ? '12' : '11',
+      merchantName,
+      merchantCity,
+      amount: isDynamic ? amount : undefined,
+      mai28: {
+        bic: CBE_BIC,
+        accountOrPhone: accountNumber,
+      },
+      addl: {
+        purpose: purpose.trim() ? purpose.trim() : undefined,
+      }
+    };
+    const newPayload = buildEMVQR(params);
+    setPayload(newPayload);
 
-  const qrURL = `/api/qr?payload=${encodeURIComponent(payload)}`;
+  }, [merchantName, merchantCity, accountNumber, amount, purpose]);
+
+  const qrUrl = payload ? `/api/qr?payload=${encodeURIComponent(payload)}` : '#';
+  const isDynamic = amount.trim() !== '';
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <h1 className="mb-2 text-2xl font-semibold">IPS‑ET Interoperable QR Generator</h1>
-      <p className="mb-6 text-sm text-gray-600">Build EMVCo‑compliant payloads for Telebirr, CBE, or custom PSPs and preview as a QR.</p>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="space-y-3">
-          <label className="block text-sm font-medium">Platform</label>
-          <div className="flex gap-2">
-            <select
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value as any)}
-              className="w-1/2 rounded-lg border px-3 py-2 text-sm"
-            >
-              <option value="telebirr">Telebirr</option>
-              <option value="cbe">CBE</option>
-              <option value="custom">Custom</option>
-            </select>
-            <Input placeholder="BIC (e.g., EBIRETAA)" value={bic} onChange={(e) => setBic(e.target.value)} disabled={platform !== "custom"} />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Top header and platform summary */}
+      <header className="bg-white dark:bg-gray-800 border-b">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-6xl">
+          <div className='flex justify-between'>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">CBE EMVCo QR Generator (Experimental)</h1>
+            <Link href="/advanced" passHref>
+              <Button className="ml-4">Advanced</Button>
+            </Link>
           </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="mb-1 block text-sm">POI Method</label>
-              <select value={poiMethod} onChange={(e) => setPoiMethod(e.target.value as POIMethod)} className="w-full rounded-lg border px-3 py-2 text-sm">
-                <option value="11">Static (11)</option>
-                <option value="12">Dynamic (12)</option>
-              </select>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+            Builds EMVCo-compliant payment QR payloads for the Commercial Bank of Ethiopia (CBE), aligned with IPS‑ET.
+          </p>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="rounded-lg border bg-white dark:bg-gray-800 p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">EMV TLV + CRC</h3>
+              <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">Generates Tag‑Length‑Value and CRC‑16/CCITT‑FALSE.</p>
             </div>
-            <div>
-              <label className="mb-1 block text-sm">Amount (Tag 54)</label>
-              <Input placeholder="e.g., 150.00" value={amount} onChange={(e) => setAmount(e.target.value)} disabled={poiMethod !== "12"} />
+            <div className="rounded-lg border bg-white dark:bg-gray-800 p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Static & Dynamic</h3>
+              <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">POI Method 11 static, 12 dynamic when amount is set.</p>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="mb-1 block text-sm">Merchant Name (≤25B)</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            <div className="rounded-lg border bg-white dark:bg-gray-800 p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Preview & Inspect</h3>
+              <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">QR SVG preview and payload breakdown included.</p>
             </div>
-            <div>
-              <label className="mb-1 block text-sm">City (≤15B)</label>
-              <Input value={city} onChange={(e) => setCity(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="mb-1 block text-sm">Account / Phone (Tag 28/02)</label>
-              <Input value={acctOrPhone} onChange={(e) => setAcctOrPhone(e.target.value)} />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm">MCC (Tag 52)</label>
-              <Input value={mcc} onChange={(e) => setMcc(e.target.value)} />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm">Purpose (62/08 or use Tag 80)</label>
-            <Input value={purpose} onChange={(e) => setPurpose(e.target.value)} />
-          </div>
-
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={() => navigator.clipboard.writeText(payload)}
-              className="rounded-lg bg-black px-4 py-2 text-sm text-white hover:opacity-90"
-            >Copy Payload</button>
-            <a
-              href={qrURL}
-              download="qr.svg"
-              className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
-            >Download QR (SVG)</a>
           </div>
         </div>
+      </header>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium">QR Preview</label>
-          <div className="rounded-xl border p-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrURL} alt="QR" className="mx-auto h-auto w-64" />
+      {/* Main content */}
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Form */}
+          <div className="rounded-lg border bg-white dark:bg-gray-800 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Merchant Details</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Enter the fields to generate a compliant payload.</p>
+
+            <div className="mt-6 space-y-5">
+              <div>
+                <label htmlFor="merchantName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Merchant Name
+                </label>
+                <Input id="merchantName" type="text" value={merchantName} onChange={e => setMerchantName(e.target.value)} placeholder="Doing business as name" />
+              </div>
+
+              <div>
+                <label htmlFor="merchantCity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Merchant City
+                </label>
+                <Input id="merchantCity" type="text" value={merchantCity} onChange={e => setMerchantCity(e.target.value)} placeholder="e.g., Addis Ababa" />
+              </div>
+
+              <div>
+                <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  CBE Account Number
+                </label>
+                <Input id="accountNumber" type="text" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Merchant's CBE account" />
+              </div>
+
+              <div>
+                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Amount (Optional)
+                  <span className="text-xs text-gray-500 ml-2">Sets dynamic single-use QR when present</span>
+                </label>
+                <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g., 150.00" />
+              </div>
+
+              <div>
+                <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Purpose of Transaction (Optional)
+                </label>
+                <Input id="purpose" type="text" value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="e.g., Invoice 123, School Fee" />
+              </div>
+            </div>
           </div>
-          <label className="mb-2 mt-4 block text-sm font-medium">Raw Payload</label>
-          <textarea className="h-40 w-full rounded-lg border p-2 text-xs" readOnly value={payload} />
-        </div>
-      </div>
 
-      <div className="mt-6 text-xs text-gray-500">
-        <p><strong>Notes:</strong> Country=ET (Tag 58), Currency=230 (Tag 53). Keep Name ≤25 bytes and City ≤15 bytes. Tag 28 includes sub‑tags 00 (GUID), 01 (BIC), 02 (account/phone). CRC is auto‑computed (Tag 63).</p>
-      </div>
+          {/* Preview */}
+          <div className="flex flex-col gap-8">
+            <div className="rounded-lg border bg-white dark:bg-gray-800 p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">QR Preview</h3>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="font-medium">{isDynamic ? 'Dynamic' : 'Static'}</span>
+                  <span className="mx-2">•</span>
+                  <span>POI {isDynamic ? '12' : '11'}</span>
+                  <span className="mx-2">•</span>
+                  <span>Len: {payload.length}</span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <QrCodeDisplay payload={payload} />
+              </div>
+
+              <div className="mt-6 flex items-center gap-3">
+                <Button onClick={() => navigator.clipboard.writeText(payload)} disabled={!payload}>
+                  Copy Payload
+                </Button>
+                <a
+                  href={qrUrl}
+                  className={`inline-flex items-center rounded-md px-3 py-2 text-sm font-medium border ${payload
+                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                    : 'opacity-50 pointer-events-none text-gray-500 dark:text-gray-400'
+                    }`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open SVG
+                </a>
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-white dark:bg-gray-800 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Payload Inspector</h3>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Tag, length, and value breakdown of the generated TLV.</p>
+              <div className="mt-4">
+                <PayloadDisplay payload={payload} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
-  );
+  )
 }
+export default CbeQrGenerator
