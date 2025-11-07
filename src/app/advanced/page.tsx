@@ -22,14 +22,14 @@ export default function StructuredPage() {
     // Defaults from your sample structure
     const [poiMethod] = useState("11");
     const [bic, setBic] = useState(PLATFORM_BIC.cbe); // CBETETAA
-    const [guid, setGuid] = useState("1000612736468");
-    const [account, setAccount] = useState("1000612736468");
+    const [guid, setGuid] = useState("1000123456789");
+    const [account, setAccount] = useState("1000123456789");
     const [mcc, setMcc] = useState("0000");
     const [currency] = useState("230");
     const [country] = useState("ET");
-    const [name, setName] = useState("NAHOM SOLOMON ABERA");
+    const [name, setName] = useState("YOUR FULL NAME");
     const [city, setCity] = useState("city");
-    const [mobile, setMobile] = useState("+251-906630353");
+    const [mobile, setMobile] = useState("+251-912345678");
     const [purpose, setPurpose] = useState("Payment for services");
     const [channel, setChannel] = useState("CBE Mobile Banking");
     const [store, setStore] = useState("cbeSt");
@@ -203,7 +203,7 @@ export default function StructuredPage() {
                                 </div>
                                 <div>
                                     <Label htmlFor="account" className="mb-1">
-                                        Account / Phone (28/02)
+                                        Account (28/02)
                                     </Label>
                                     <Input id="account" value={account} onChange={(e) => setAccount(e.target.value)} />
                                 </div>
@@ -241,7 +241,7 @@ export default function StructuredPage() {
                                     checked={incName}
                                     onCheckedChange={(checked) => setIncName(checked === true)}
                                 />
-                                <Label htmlFor="toggle-name">Name (59)</Label>
+                                <Label htmlFor="toggle-name">Name (59) - exactly like on you account</Label>
                                 {incName && (
                                     <Input
                                         aria-label="Name (59)"
@@ -341,7 +341,11 @@ export default function StructuredPage() {
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <Checkbox id="toggle-62-mobile" checked={inc62Mobile} onChange={(e) => setInc62Mobile((e.target as HTMLInputElement).checked)} />
+                                <Checkbox
+                                    id="toggle-62-mobile"
+                                    checked={inc62Mobile}
+                                    onCheckedChange={(checked) => setInc62Mobile(checked === true)}
+                                />
                                 <Label htmlFor="toggle-62-mobile">Mobile (62/02)</Label>
                                 {inc62Mobile && (
                                     <Input
@@ -354,7 +358,11 @@ export default function StructuredPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Checkbox id="toggle-62-purpose" checked={inc62Purpose} onChange={(e) => setInc62Purpose((e.target as HTMLInputElement).checked)} />
+                                <Checkbox
+                                    id="toggle-62-purpose"
+                                    checked={inc62Purpose}
+                                    onCheckedChange={(checked) => setInc62Purpose(checked === true)}
+                                />
                                 <Label htmlFor="toggle-62-purpose">Purpose (62/08)</Label>
                                 {inc62Purpose && (
                                     <Input
@@ -367,7 +375,11 @@ export default function StructuredPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Checkbox id="toggle-62-channel" checked={inc62Channel} onChange={(e) => setInc62Channel((e.target as HTMLInputElement).checked)} />
+                                <Checkbox
+                                    id="toggle-62-channel"
+                                    checked={inc62Channel}
+                                    onCheckedChange={(checked) => setInc62Channel(checked === true)}
+                                />
                                 <Label htmlFor="toggle-62-channel">Channel (62/11)</Label>
                                 {inc62Channel && (
                                     <Input
@@ -380,7 +392,11 @@ export default function StructuredPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Checkbox id="toggle-62-store" checked={inc62Store} onChange={(e) => setInc62Store((e.target as HTMLInputElement).checked)} />
+                                <Checkbox
+                                    id="toggle-62-store"
+                                    checked={inc62Store}
+                                    onCheckedChange={(checked) => setInc62Store(checked === true)}
+                                />
                                 <Label htmlFor="toggle-62-store">Store (62/03)</Label>
                                 {inc62Store && (
                                     <Input
@@ -393,7 +409,11 @@ export default function StructuredPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Checkbox id="toggle-62-terminal" checked={inc62Terminal} onChange={(e) => setInc62Terminal((e.target as HTMLInputElement).checked)} />
+                                <Checkbox
+                                    id="toggle-62-terminal"
+                                    checked={inc62Terminal}
+                                    onCheckedChange={(checked) => setInc62Terminal(checked === true)}
+                                />
                                 <Label htmlFor="toggle-62-terminal">Terminal (62/07)</Label>
                                 {inc62Terminal && (
                                     <Input
@@ -406,7 +426,11 @@ export default function StructuredPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Checkbox id="toggle-80" checked={inc80} onChange={(e) => setInc80((e.target as HTMLInputElement).checked)} />
+                                <Checkbox
+                                    id="toggle-80"
+                                    checked={inc80}
+                                    onCheckedChange={(checked) => setInc80(checked === true)}
+                                />
                                 <Label htmlFor="toggle-80">Top-level Context (80)</Label>
                                 {inc80 && (
                                     <Input
